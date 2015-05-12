@@ -3,9 +3,8 @@ using System.Collections;
 using System.Runtime.InteropServices;
 using System.Text;
 
-namespace GPUParticle {
-
-	public class ParticleService<T> : System.IDisposable {
+namespace GPUParticleSystem {
+	public class GPUParticleService<T> : System.IDisposable {
 		public const string KERNEL_INIT = "Particle_Init";
 		public const string KERNEL_EMIT = "Particle_Emit";
 
@@ -28,15 +27,15 @@ namespace GPUParticle {
 		public readonly ComputeBuffer InitialBuf;
 		public readonly ComputeBuffer CounterBuf;
 
-		int _nThreadGroupsX;
-		int _nThreadGroupsY;
+		public readonly int NGroupsX;
+		public readonly int NGroupsY;
 		uint[] _counts;
 		T[] _particles;
 
-		public ParticleService(ComputeShader compute, int desiredCapacity) {
-			Common.ShaderUtil.DispatchSize(desiredCapacity, N_THREADS_X, N_THREADS_Y, MAX_DISPATCHES_X, 
-			                               out _nThreadGroupsX, out _nThreadGroupsY);
-			this.Capacity = _nThreadGroupsX * _nThreadGroupsY * N_THREADS_X * N_THREADS_Y;
+		public GPUParticleService(ComputeShader compute, int desiredCapacity) {
+			ShaderUtil.DispatchSize(desiredCapacity, N_THREADS_X, N_THREADS_Y, MAX_DISPATCHES_X, 
+			                               out NGroupsX, out NGroupsY);
+			this.Capacity = NGroupsX * NGroupsY * N_THREADS_X * N_THREADS_Y;
 			
 			this.Compute = compute;
 			this.KernelInit = compute.FindKernel (KERNEL_INIT);
@@ -50,7 +49,7 @@ namespace GPUParticle {
 			this._particles = new T[Capacity];
 
 			compute.SetBuffer(KernelInit, PROP_DEADLIST_APPEND_BUF, DeadBuf);
-			compute.Dispatch(KernelInit, _nThreadGroupsX, _nThreadGroupsY, 1);
+			compute.Dispatch(KernelInit, NGroupsX, NGroupsY, 1);
 		}
 
 		public void Emit(T[] particles) {

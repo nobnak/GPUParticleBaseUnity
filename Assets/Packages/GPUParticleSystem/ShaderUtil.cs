@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-namespace Common {
+namespace GPUParticleSystem {
 	public static class ShaderUtil {	
 		
 		public static void DispatchSize(int count, int nThreadsX, int nThreadsY, int maxDispatchesX, out int nGroupsX, out int nGroupsY) {
