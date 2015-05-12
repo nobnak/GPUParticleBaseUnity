@@ -1,0 +1,29 @@
+﻿#pragma kernel Particle_Emit
+#pragma kernel Particle_Init
+#pragma kernel Update
+
+
+
+struct Particle {
+	float life;
+	float3 position;
+};
+
+float dt;
+RWStructuredBuffer<Particle> ParticleBuf;
+#include "../../Packages/GPUParticle/GPUParticle.cginc"
+
+
+
+[numthreads(PARTICLE_NUM_THREADS_X,1,1)]
+void Update(uint3 id : SV_DispatchThreadID) {
+	uint i = Particle_Index(id);
+	Particle p = ParticleBuf[i];
+	if (p.life <= 0)
+		return;
+	
+	p.life -= dt;
+	if (p.life <= 0)
+		Particle_Dead(i);
+	ParticleBuf[i] = p;
+}
