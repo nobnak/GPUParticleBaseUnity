@@ -6,33 +6,41 @@
 
 
 
-AppendStructuredBuffer<uint> Particle_DeadListAppendBuf;
-ConsumeStructuredBuffer<uint> Particle_DeadListConsumeBuf;
+RWStructuredBuffer<uint> Particle_DeadBuf;
 RWStructuredBuffer<Particle> Particle_InitialBuf;
-RWByteAddressBuffer Particle_CounterBuf;
+RWByteAddressBuffer Particle_CounterCurrBuf;
+RWByteAddressBuffer Particle_CounterPrevBuf;
 
 
 
 uint Particle_Index(uint3 id) { return id.x + id.y * PARTICLE_MAX_DISPATCH_X; }
-void Particle_Dead(uint i) { Particle_DeadListAppendBuf.Append(i); }
-uint Particle_Birth() { return Particle_DeadListConsumeBuf.Consume(); }
+void Particle_Dead(uint i) {
+	uint org;
+	Particle_CounterCurrBuf.InterlockedAdd(0, +1, org);
+	Particle_DeadBuf[org] = i;
+}
+uint Particle_Birth() {
+	uint org;
+	Particle_CounterCurrBuf.InterlockedAdd(0, -1, org);
+	return Particle_DeadBuf[org+1]; 
+}
 
 
 
 [numthreads(1,1,1)]
 void Particle_Emit(uint3 id : SV_DispatchThreadID) {
 	uint i = Particle_Index(id);
-	uint count = Particle_CounterBuf.Load(0);
+	uint count = Particle_CounterPrevBuf.Load(0);
 	if (i >= count)
 		return;
 	uint pid = Particle_Birth();
 	ParticleBuf[pid] = Particle_InitialBuf[i];
 }
 
-[numthreads(PARTICLE_NUM_THREADS_X,1,1)]
-void Particle_Init(uint3 id : SV_DispatchThreadID) {
-	uint i = Particle_Index(id);
-	Particle_Dead(i);
+[numthreads(1,1,1)]
+void Particle_Copy(uint3 id : SV_DispatchThreadID) {
+	uint i = 4 * Particle_Index(id);
+	Particle_CounterPrevBuf.Store(i, Particle_CounterCurrBuf.Load(i));
 }
 
 #endif

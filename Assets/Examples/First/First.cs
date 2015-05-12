@@ -41,9 +41,8 @@ public class First : MonoBehaviour {
 		StartCoroutine(Progress());
 	}
 	void Update () {
+		_particles.Prepare(_kernelUpdate);
 		compute.SetFloat(PROP_TIME_DELTA, Time.deltaTime);
-		compute.SetBuffer(_kernelUpdate, GPUParticleService<GPUParticle>.PROP_PARTICLE_BUF, _particles.ParticleBuf);
-		compute.SetBuffer(_kernelUpdate, GPUParticleService<GPUParticle>.PROP_DEADLIST_APPEND_BUF, _particles.DeadBuf);
 		compute.Dispatch(_kernelUpdate, _particles.NGroupsX, _particles.NGroupsY, 1);
 
 		if (splash) {
@@ -86,7 +85,7 @@ public class First : MonoBehaviour {
 		while (true) {
 			yield return new WaitForSeconds(1f);
 			
-			var count = _particles.GetCount(_particles.DeadBuf);
+			var count = _particles.GetDeadCount();
 			Debug.LogFormat("Particle Dead Count = {0}/{1}", count, _particles.Capacity);
 		}
 	}
