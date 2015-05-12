@@ -29,8 +29,10 @@ namespace GPUParticleSystem {
 
 		public readonly int NGroupsX;
 		public readonly int NGroupsY;
+
 		uint[] _counts;
 		T[] _particles;
+		T[] _initials;
 
 		public GPUParticleService(ComputeShader compute, int desiredCapacity) {
 			ShaderUtil.DispatchSize(desiredCapacity, N_THREADS_X, N_THREADS_Y, MAX_DISPATCHES_X, 
@@ -46,7 +48,10 @@ namespace GPUParticleSystem {
 			this.CounterBuf = new ComputeBuffer(4, Marshal.SizeOf(typeof(int)), ComputeBufferType.Raw);
 
 			this._counts = new uint[CounterBuf.count];
-			this._particles = new T[Capacity];
+			this._particles = new T[ParticleBuf.count];
+			this._initials = new T[InitialBuf.count];
+
+			DeadBuf.SetData(_particles);
 
 			compute.SetBuffer(KernelInit, PROP_DEADLIST_APPEND_BUF, DeadBuf);
 			compute.Dispatch(KernelInit, NGroupsX, NGroupsY, 1);
@@ -55,12 +60,15 @@ namespace GPUParticleSystem {
 		public void Emit(T[] particles) {
 			ComputeBuffer.CopyCount(DeadBuf, CounterBuf, 0);
 
-			InitialBuf.SetData(particles);
+			var len = Mathf.Min(particles.Length, _initials.Length);
+			System.Array.Copy(particles, _initials, len);
+			InitialBuf.SetData(_initials);
+
 			Compute.SetBuffer(KernelEmit, PROP_PARTICLE_BUF, ParticleBuf);
 			Compute.SetBuffer(KernelEmit, PROP_INITIAL_BUF, InitialBuf);
 			Compute.SetBuffer(KernelEmit, PROP_COUNTER_BUF, CounterBuf);
 			Compute.SetBuffer(KernelEmit, PROP_DEADLIST_CONSUME_BUF, DeadBuf);
-			Compute.Dispatch(KernelEmit, particles.Length, 1, 1);
+			Compute.Dispatch(KernelEmit, len, 1, 1);
 		}
 		public uint GetCount(ComputeBuffer buf) {
 			ComputeBuffer.CopyCount(buf, CounterBuf, 0);

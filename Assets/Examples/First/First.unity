@@ -174,9 +174,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f89c4280e09e27149914fdcf37236e76, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  capacity: 64
-  radius: 10
+  capacity: 8192
+  speed: 3
+  splash: 1
   compute: {fileID: 7200000, guid: 614dd61e1e8a44a4aae018d671f18a96, type: 3}
+  mat: {fileID: 2100000, guid: f7dab5f852bffc44c81fb7e57a1f06eb, type: 2}
+  fab: {fileID: 197654, guid: 31579fe3be4949645aeec63110887c4e, type: 2}
 --- !u!4 &647905401
 Transform:
   m_ObjectHideFlags: 0
