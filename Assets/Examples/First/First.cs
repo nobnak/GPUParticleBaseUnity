@@ -41,6 +41,7 @@ public class First : MonoBehaviour {
 		StartCoroutine(Progress());
 	}
 	void Update () {
+#if true
 		_particles.Prepare(_kernelUpdate);
 		compute.SetFloat(PROP_TIME_DELTA, Time.deltaTime);
 		compute.Dispatch(_kernelUpdate, _particles.NGroupsX, _particles.NGroupsY, 1);
@@ -53,9 +54,16 @@ public class First : MonoBehaviour {
 			var localPos = transform.InverseTransformPoint(ray.origin);
 
 			var particles = new GPUParticle[]{ new GPUParticle(){ 
-					life = 30, velocity = speed * localDir, position = localPos } };
+					life = 5, velocity = speed * localDir, position = localPos } };
 			_particles.Emit(particles);
 		}
+#else
+		if (splash) {
+			var particles = new GPUParticle[]{
+				new GPUParticle(){ life = 5, position = 10f * Random.insideUnitSphere } };
+			_particles.Emit(particles);
+		}
+#endif
 	}
 	void OnDrawGizmosSelected() {
 		if (_particles != null)

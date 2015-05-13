@@ -6,7 +6,8 @@
 
 
 
-RWStructuredBuffer<uint> Particle_DeadBuf;
+AppendStructuredBuffer<uint> Particle_DeadAppendBuf;
+ConsumeStructuredBuffer<uint> Particle_DeadConsumeBuf;
 RWStructuredBuffer<Particle> Particle_InitialBuf;
 RWByteAddressBuffer Particle_CounterCurrBuf;
 RWByteAddressBuffer Particle_CounterPrevBuf;
@@ -15,14 +16,12 @@ RWByteAddressBuffer Particle_CounterPrevBuf;
 
 uint Particle_Index(uint3 id) { return id.x + id.y * PARTICLE_MAX_DISPATCH_X; }
 void Particle_Dead(uint i) {
-	uint org;
-	Particle_CounterCurrBuf.InterlockedAdd(0, +1, org);
-	Particle_DeadBuf[org] = i;
+	Particle_CounterCurrBuf.InterlockedAdd(0, +1);
+	Particle_DeadAppendBuf.Append(i);
 }
 uint Particle_Birth() {
-	uint org;
-	Particle_CounterCurrBuf.InterlockedAdd(0, -1, org);
-	return Particle_DeadBuf[org+1]; 
+	Particle_CounterCurrBuf.InterlockedAdd(0, -1);
+	return Particle_DeadConsumeBuf.Consume(); 
 }
 
 

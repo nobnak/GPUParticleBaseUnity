@@ -174,7 +174,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f89c4280e09e27149914fdcf37236e76, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  capacity: 8192
+  capacity: 2048
   speed: 3
   splash: 1
   compute: {fileID: 7200000, guid: 614dd61e1e8a44a4aae018d671f18a96, type: 3}
