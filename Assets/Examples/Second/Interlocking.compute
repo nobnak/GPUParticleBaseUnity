@@ -1,0 +1,17 @@
+﻿#pragma kernel Count
+
+
+
+RWByteAddressBuffer _Counter;
+RWByteAddressBuffer _Output;
+
+
+
+[numthreads(64,1,1)]
+void Count(uint3 id : SV_DispatchThreadID) {
+	uint orig;
+	_Counter.InterlockedAdd(0, +1, orig);
+	
+	uint i = 4 * id.x;
+	_Output.Store(i, orig);
+}
